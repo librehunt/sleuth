@@ -1,7 +1,7 @@
 # Add Site Type/Category Filtering
 
 **Type:** feature  
-**Status:** in_progress  
+**Status:** done  
 **Branch:** feat/site-type-filtering  
 **Linked roadmap section:** Core Features
 
