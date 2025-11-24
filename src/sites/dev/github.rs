@@ -1,20 +1,15 @@
 //! GitHub site checker
 
-use crate::core::result::SearchResult;
 use crate::data::site_info::SiteType;
 use crate::sites::Site;
-use crate::utils::error::Result;
-use async_trait::async_trait;
 
 /// GitHub site checker
-pub struct GitHubChecker {
-    // Fields can be added here as needed (e.g., HTTP client)
-}
+pub struct GitHubChecker;
 
 impl GitHubChecker {
     /// Create a new GitHub checker
     pub fn new() -> Self {
-        Self {}
+        Self
     }
 }
 
@@ -24,7 +19,6 @@ impl Default for GitHubChecker {
     }
 }
 
-#[async_trait]
 impl Site for GitHubChecker {
     fn name(&self) -> &str {
         "GitHub"
@@ -38,14 +32,9 @@ impl Site for GitHubChecker {
         "https://github.com/{}"
     }
 
-    async fn check_username(&self, username: &str) -> Result<SearchResult> {
-        // TODO: Implement actual GitHub username checking
-        // For now, return a placeholder
-        Ok(SearchResult::not_found(
-            self.name().to_string(),
-            username.to_string(),
-        ))
-    }
+    // Uses default build_url() implementation
+    // Uses default parse_response() implementation (200 = exists, 404 = not found)
+    // Uses default http_method() (HEAD)
 }
 
 #[cfg(test)]
@@ -70,13 +59,16 @@ mod tests {
         assert_eq!(checker.url_pattern(), "https://github.com/{}");
     }
 
-    #[tokio::test]
-    async fn test_github_checker_check_username() {
+    #[test]
+    fn test_github_checker_build_url() {
         let checker = GitHubChecker::new();
-        let result = checker.check_username("testuser").await;
-        assert!(result.is_ok());
-        let result = result.unwrap();
-        assert_eq!(result.site, "GitHub");
-        assert_eq!(result.username, "testuser");
+        assert_eq!(checker.build_url("testuser"), "https://github.com/testuser");
+    }
+
+    #[test]
+    fn test_github_checker_parse_response() {
+        let checker = GitHubChecker::new();
+        assert_eq!(checker.parse_response(200, None), Some(true));
+        assert_eq!(checker.parse_response(404, None), Some(false));
     }
 }
