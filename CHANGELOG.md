@@ -14,6 +14,13 @@
 - Examples and benchmarks directories
 - Documentation (ARCHITECTURE.md, CONTRIBUTING.md, SITES.md)
 - Cargo.toml with necessary dependencies
+- Site type/category system (dev, social, nsfw, professional, gaming, forum, other)
+- CLI `--type` / `-t` flag for filtering sites by category
+- Site filtering logic in scanner module
+- `SiteType` enum with `FromStr` implementation
+- Type-based directory structure for sites (organized by category)
+- Example GitHub site checker implementation
+- SiteRegistry for centralized site management and filtering
 
 
 

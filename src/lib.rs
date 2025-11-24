@@ -13,7 +13,8 @@ pub mod utils;
 
 // Re-export commonly used types
 pub use core::result::SearchResult;
-pub use sites::Site;
+pub use data::site_info::{SiteInfo, SiteType};
+pub use sites::{Site, SiteRegistry, SiteStatistics};
 pub use utils::error::{Result, SleuthError};
 
 #[cfg(test)]
