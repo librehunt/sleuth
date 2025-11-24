@@ -1,9 +1,9 @@
 [package]
-name = "rbase"
-version = "0.2.2"
+name = "sleuth"
+version = "0.0.1"
 authors = ["LSH <github@lsh.tech>"]
 edition = "2021"
-description = "Github template to setup the CI and cargo publish"
+description = "Sleuth project"
 license = "GPL-3.0"
 
 

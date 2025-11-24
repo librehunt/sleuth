@@ -1,1 +1,8 @@
 /target
+
+# Cursor agent state and cache
+.cursor/
+scripts
+issues/shared
+issues/sleuth/proposal
+issues/sleuth/todo
