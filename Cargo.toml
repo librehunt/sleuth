@@ -3,8 +3,32 @@ name = "sleuth"
 version = "0.0.1"
 authors = ["LSH <github@lsh.tech>"]
 edition = "2021"
-description = "Sleuth project"
+description = "Sleuth - A Rust implementation of sherlock"
 license = "GPL-3.0"
 
-
 [dependencies]
+# CLI
+clap = { version = "4.0", features = ["derive"] }
+# HTTP
+reqwest = { version = "0.11", features = ["json", "cookies"] }
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+# Output
+colored = "2.0"
+tabled = "0.15"
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "bench_scanner"
+harness = false
