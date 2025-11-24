@@ -6,6 +6,7 @@
 
 ### Added
 - Request interface abstraction (`Request` trait) for swappable HTTP implementations
+- Architecture diagrams in `ARCHITECTURE.md` (flowchart, component graph, sequence diagram)
 - `HttpRequest` implementation using reqwest
 - `TorRequest` placeholder for future Tor support
 - Refactored `Site` trait: removed async `check_username()`, added `build_url()`, `parse_response()`, `http_method()`
