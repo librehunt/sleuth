@@ -38,8 +38,10 @@ sleuth/
 
 ### Sites Module (`src/sites/`)
 - Trait-based design for site checkers
+- Organized by type in subdirectories (dev, social, professional, gaming, forum, nsfw, other)
 - Each site implements the `Site` trait
-- Easy to add new sites
+- Easy to add new sites by creating files in the appropriate type directory
+- All sites are automatically registered via `sites::all_sites()`
 
 ### HTTP Client (`src/http/`)
 - Abstraction over `reqwest`

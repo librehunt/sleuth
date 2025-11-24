@@ -18,6 +18,8 @@
 - CLI `--type` / `-t` flag for filtering sites by category
 - Site filtering logic in scanner module
 - `SiteType` enum with `FromStr` implementation
+- Type-based directory structure for sites (organized by category)
+- Example GitHub site checker implementation
 
 
 

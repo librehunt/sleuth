@@ -30,12 +30,45 @@ Sites are categorized into types for filtering:
 
 Users can filter sites by type using the `--type` / `-t` CLI flag.
 
+## Directory Structure
+
+Sites are organized by type in subdirectories:
+
+```
+src/sites/
+├── mod.rs              # Main module, re-exports all sites
+├── site.rs             # Site trait definition
+├── dev/                # Development/tech platforms
+│   ├── mod.rs
+│   ├── github.rs
+│   └── ...
+├── social/             # Social media platforms
+│   ├── mod.rs
+│   └── ...
+├── professional/       # Professional networks
+│   ├── mod.rs
+│   └── ...
+├── gaming/             # Gaming platforms
+│   ├── mod.rs
+│   └── ...
+├── forum/              # Forums and communities
+│   ├── mod.rs
+│   └── ...
+├── nsfw/               # NSFW/adult content
+│   ├── mod.rs
+│   └── ...
+└── other/              # Other/uncategorized
+    ├── mod.rs
+    └── ...
+```
+
 ## Implementation Steps
 
-1. Create a new file in `src/sites/` (e.g., `github.rs`)
+1. Determine the site type and create a file in the appropriate subdirectory (e.g., `src/sites/dev/github.rs`)
 2. Implement the `Site` trait
 3. Add tests in the same file
-4. Register in `src/sites/mod.rs`
+4. Register in the type-specific `mod.rs` (e.g., `src/sites/dev/mod.rs`)
+5. The site will be automatically included via `sites::all_sites()`
 
 ## Example
 
