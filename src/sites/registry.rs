@@ -133,10 +133,6 @@ pub struct SiteStatistics {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::result::SearchResult;
-    use crate::sites::Site;
-    use crate::utils::error::Result;
-    use async_trait::async_trait;
 
     // Mock site for testing
     struct MockSite {
@@ -144,14 +140,9 @@ mod tests {
         site_type: SiteType,
     }
 
-    #[async_trait]
     impl Site for MockSite {
         fn name(&self) -> &str {
             &self.name
-        }
-
-        async fn check_username(&self, _username: &str) -> Result<SearchResult> {
-            todo!()
         }
 
         fn url_pattern(&self) -> &str {

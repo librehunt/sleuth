@@ -5,6 +5,15 @@
 [Full Changelog](https://github.com/librehunt/sleuth/compare/f9d6d027ed2e0164435e56e6c12f0184422a79c8...HEAD)
 
 ### Added
+- Request interface abstraction (`Request` trait) for swappable HTTP implementations
+- `HttpRequest` implementation using reqwest
+- `TorRequest` placeholder for future Tor support
+- Refactored `Site` trait: removed async `check_username()`, added `build_url()`, `parse_response()`, `http_method()`
+- `scan_username()` function with parameter order: `username`, `sites`, `request` (defaults to HTTP)
+- `Engine` for orchestrating searches across sites
+- CLI output formatting (text, JSON, CSV)
+- End-to-end search functionality with GitHub example
+- Concurrent request execution using Tokio tasks
 - Repository structure scaffolding with modular architecture
 - Core modules: CLI, engine, sites, HTTP client, config, data, utils
 - Site trait for implementing site checkers
