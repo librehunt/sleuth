@@ -78,12 +78,63 @@ mod tests {
     }
 
     #[test]
+    fn test_print_results_text_empty() {
+        let results: Vec<SearchResult> = vec![];
+        print_results(&results, "text");
+    }
+
+    #[test]
+    fn test_print_results_text_all_found() {
+        let results = vec![
+            SearchResult::found(
+                "GitHub".to_string(),
+                "test".to_string(),
+                "https://github.com/test".to_string(),
+            ),
+            SearchResult::found(
+                "GitLab".to_string(),
+                "test".to_string(),
+                "https://gitlab.com/test".to_string(),
+            ),
+        ];
+        print_results(&results, "text");
+    }
+
+    #[test]
+    fn test_print_results_text_all_not_found() {
+        let results = vec![
+            SearchResult::not_found("Twitter".to_string(), "test".to_string()),
+            SearchResult::not_found("Facebook".to_string(), "test".to_string()),
+        ];
+        print_results(&results, "text");
+    }
+
+    #[test]
     fn test_print_results_json() {
         let results = vec![SearchResult::found(
             "GitHub".to_string(),
             "test".to_string(),
             "https://github.com/test".to_string(),
         )];
+        print_results(&results, "json");
+    }
+
+    #[test]
+    fn test_print_results_json_empty() {
+        let results: Vec<SearchResult> = vec![];
+        print_results(&results, "json");
+    }
+
+    #[test]
+    fn test_print_results_json_multiple() {
+        let results = vec![
+            SearchResult::found(
+                "GitHub".to_string(),
+                "test".to_string(),
+                "https://github.com/test".to_string(),
+            ),
+            SearchResult::not_found("Twitter".to_string(), "test".to_string()),
+        ];
         print_results(&results, "json");
     }
 
@@ -95,5 +146,31 @@ mod tests {
             "https://github.com/test".to_string(),
         )];
         print_results(&results, "csv");
+    }
+
+    #[test]
+    fn test_print_results_csv_empty() {
+        let results: Vec<SearchResult> = vec![];
+        print_results(&results, "csv");
+    }
+
+    #[test]
+    fn test_print_results_csv_no_url() {
+        let results = vec![SearchResult::not_found(
+            "Twitter".to_string(),
+            "test".to_string(),
+        )];
+        print_results(&results, "csv");
+    }
+
+    #[test]
+    fn test_print_results_invalid_format() {
+        let results = vec![SearchResult::found(
+            "GitHub".to_string(),
+            "test".to_string(),
+            "https://github.com/test".to_string(),
+        )];
+        // Should default to text format
+        print_results(&results, "invalid");
     }
 }

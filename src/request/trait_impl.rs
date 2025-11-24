@@ -61,6 +61,7 @@ mod tests {
         let response = RequestResponse::new(200);
         assert_eq!(response.status_code, 200);
         assert!(response.body.is_none());
+        assert!(response.headers.is_empty());
     }
 
     #[test]
@@ -68,5 +69,26 @@ mod tests {
         let response = RequestResponse::with_body(200, "test body".to_string());
         assert_eq!(response.status_code, 200);
         assert_eq!(response.body, Some("test body".to_string()));
+        assert!(response.headers.is_empty());
+    }
+
+    #[test]
+    fn test_request_response_different_status_codes() {
+        let response_404 = RequestResponse::new(404);
+        assert_eq!(response_404.status_code, 404);
+
+        let response_500 = RequestResponse::new(500);
+        assert_eq!(response_500.status_code, 500);
+
+        let response_301 = RequestResponse::new(301);
+        assert_eq!(response_301.status_code, 301);
+    }
+
+    #[test]
+    fn test_request_response_clone() {
+        let response = RequestResponse::with_body(200, "test".to_string());
+        let cloned = response.clone();
+        assert_eq!(cloned.status_code, response.status_code);
+        assert_eq!(cloned.body, response.body);
     }
 }

@@ -99,12 +99,25 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_http_request_new_zero_timeout() {
+        let request = HttpRequest::new(0);
+        assert!(request.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_http_request_with_user_agent() {
+        let request = HttpRequest::with_user_agent(10, "test-agent/1.0");
+        assert!(request.is_ok());
+    }
+
+    #[tokio::test]
     async fn test_http_request_head() {
         let request = HttpRequest::new(10).unwrap();
         let response = request.head("https://github.com").await;
         assert!(response.is_ok());
         let response = response.unwrap();
         assert!(response.status_code >= 200 && response.status_code < 500);
+        assert!(response.body.is_none()); // HEAD requests don't have body
     }
 
     #[tokio::test]
@@ -115,5 +128,80 @@ mod tests {
         let response = response.unwrap();
         assert!(response.status_code >= 200 && response.status_code < 500);
         assert!(response.body.is_some());
+    }
+
+    #[tokio::test]
+    async fn test_http_request_get_has_headers() {
+        let request = HttpRequest::new(10).unwrap();
+        let response = request.get("https://github.com").await;
+        assert!(response.is_ok());
+        let response = response.unwrap();
+        // Should have some headers
+        assert!(!response.headers.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_http_request_head_has_headers() {
+        let request = HttpRequest::new(10).unwrap();
+        let response = request.head("https://github.com").await;
+        assert!(response.is_ok());
+        let response = response.unwrap();
+        // Should have some headers
+        assert!(!response.headers.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_http_request_invalid_url() {
+        let request = HttpRequest::new(10).unwrap();
+        let response = request.get("not-a-valid-url").await;
+        assert!(response.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_http_request_nonexistent_domain() {
+        let request = HttpRequest::new(1).unwrap(); // Short timeout
+        let response = request
+            .get("https://this-domain-definitely-does-not-exist-12345.com")
+            .await;
+        // Should error (timeout or DNS failure)
+        assert!(response.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_http_request_timeout() {
+        let request = HttpRequest::new(1).unwrap(); // 1 second timeout
+                                                    // Use a URL that will timeout (or take too long)
+                                                    // Note: This might not always timeout if the service is fast, so we just check it doesn't panic
+        let response = request.get("https://httpbin.org/delay/5").await;
+        // Should error due to timeout, but if it succeeds that's also OK (service might be fast)
+        // The important thing is it doesn't panic
+        let _ = response; // Just ensure it doesn't panic
+    }
+
+    #[tokio::test]
+    async fn test_http_request_method_delegation() {
+        let request = HttpRequest::new(10).unwrap();
+        // Test that request() method delegates to head() and get()
+        let head_response = request.request("HEAD", "https://github.com").await;
+        assert!(head_response.is_ok());
+
+        let get_response = request.request("GET", "https://github.com").await;
+        assert!(get_response.is_ok());
+
+        // Test case-insensitive
+        let head_lower = request.request("head", "https://github.com").await;
+        assert!(head_lower.is_ok());
+
+        let get_lower = request.request("get", "https://github.com").await;
+        assert!(get_lower.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_http_request_unsupported_method() {
+        let request = HttpRequest::new(10).unwrap();
+        let response = request.request("POST", "https://github.com").await;
+        assert!(response.is_err());
+        let err = response.unwrap_err();
+        assert!(err.to_string().contains("Unsupported HTTP method"));
     }
 }

@@ -259,4 +259,67 @@ mod tests {
         assert_eq!(filtered.len(), 1);
         assert_eq!(filtered[0].name(), "GitHub");
     }
+
+    #[tokio::test]
+    async fn test_scan_username_empty_sites() {
+        use crate::request::{create_request, RequestType};
+        let sites: Vec<&dyn Site> = vec![];
+        let request = create_request(RequestType::Http, 10).unwrap();
+        let results = scan_username("testuser", sites, Some(request)).await;
+        assert!(results.is_ok());
+        let results = results.unwrap();
+        assert!(results.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_scan_username_default_request() {
+        use crate::sites::dev::GitHubChecker;
+        let checker = GitHubChecker::new();
+        let sites: Vec<&dyn Site> = vec![&checker];
+        // Don't provide request, should default to HTTP
+        let results = scan_username("octocat", sites, None).await;
+        assert!(results.is_ok());
+        let results = results.unwrap();
+        // Should have one result
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].site, "GitHub");
+    }
+
+    #[tokio::test]
+    async fn test_scan_username_with_custom_request() {
+        use crate::request::{create_request, RequestType};
+        use crate::sites::dev::GitHubChecker;
+        let checker = GitHubChecker::new();
+        let sites: Vec<&dyn Site> = vec![&checker];
+        let request = create_request(RequestType::Http, 10).unwrap();
+        let results = scan_username("octocat", sites, Some(request)).await;
+        assert!(results.is_ok());
+        let results = results.unwrap();
+        assert_eq!(results.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_scan_username_multiple_sites() {
+        use crate::sites::dev::GitHubChecker;
+        let checker = GitHubChecker::new();
+        let sites: Vec<&dyn Site> = vec![&checker];
+        let results = scan_username("nonexistentuser12345", sites, None).await;
+        assert!(results.is_ok());
+        let results = results.unwrap();
+        // Should have results for all sites
+        assert_eq!(results.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn test_scan_username_error_handling() {
+        use crate::request::{create_request, RequestType};
+        use crate::sites::dev::GitHubChecker;
+        let checker = GitHubChecker::new();
+        let sites: Vec<&dyn Site> = vec![&checker];
+        let request = create_request(RequestType::Http, 1).unwrap(); // Short timeout
+                                                                     // Use invalid URL pattern to trigger errors
+        let results = scan_username("test", sites, Some(request)).await;
+        // Should handle errors gracefully
+        assert!(results.is_ok());
+    }
 }
