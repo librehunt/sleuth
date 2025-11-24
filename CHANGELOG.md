@@ -20,6 +20,7 @@
 - `SiteType` enum with `FromStr` implementation
 - Type-based directory structure for sites (organized by category)
 - Example GitHub site checker implementation
+- SiteRegistry for centralized site management and filtering
 
 
 

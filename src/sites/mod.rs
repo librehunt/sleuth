@@ -6,9 +6,11 @@ pub mod gaming;
 pub mod nsfw;
 pub mod other;
 pub mod professional;
+pub mod registry;
 pub mod site;
 pub mod social;
 
+pub use registry::{SiteRegistry, SiteStatistics};
 pub use site::Site;
 
 /// Get all registered sites
