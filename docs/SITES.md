@@ -10,10 +10,25 @@ Each site checker in sleuth implements the `Site` trait defined in `src/sites/si
 #[async_trait]
 pub trait Site: Send + Sync {
     fn name(&self) -> &str;
-    async fn check_username(&self, username: &str) -> Result<SearchResult, Box<dyn std::error::Error + Send + Sync>>;
+    async fn check_username(&self, username: &str) -> Result<SearchResult>;
     fn url_pattern(&self) -> &str;
+    fn site_type(&self) -> SiteType;
 }
 ```
+
+## Site Types
+
+Sites are categorized into types for filtering:
+
+- **dev**: Development/tech platforms (GitHub, GitLab, etc.)
+- **social**: Social media platforms (Twitter, Instagram, etc.)
+- **nsfw**: NSFW/adult content platforms
+- **professional**: Professional networks (LinkedIn, etc.)
+- **gaming**: Gaming platforms (Steam, Xbox, etc.)
+- **forum**: Forums and communities
+- **other**: Other/uncategorized
+
+Users can filter sites by type using the `--type` / `-t` CLI flag.
 
 ## Implementation Steps
 

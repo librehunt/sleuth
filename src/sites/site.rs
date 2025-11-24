@@ -1,6 +1,7 @@
 //! Site trait for username checking
 
 use crate::core::result::SearchResult;
+use crate::data::site_info::SiteType;
 use crate::utils::error::Result;
 use async_trait::async_trait;
 
@@ -15,6 +16,9 @@ pub trait Site: Send + Sync {
 
     /// Get the base URL pattern for this site
     fn url_pattern(&self) -> &str;
+
+    /// Get the site type/category
+    fn site_type(&self) -> SiteType;
 }
 
 #[cfg(test)]
