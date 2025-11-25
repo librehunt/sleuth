@@ -1,68 +1,69 @@
-//! Site registry for managing all sites
-
 use crate::data::site_info::SiteType;
 use crate::sites::Site;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Registry for managing all available sites
 pub struct SiteRegistry {
     /// All sites in order
-    all_sites: Vec<Box<dyn Site>>,
+    all_sites: Vec<Arc<dyn Site>>,
 }
 
 impl SiteRegistry {
     /// Create a new site registry with all registered sites
     pub fn new() -> Self {
         let all_sites = crate::sites::all_sites();
-        Self::from_sites(all_sites)
+        // Convert Box to Arc
+        let all_sites_arc = all_sites.into_iter().map(Arc::from).collect();
+        Self::from_sites(all_sites_arc)
     }
 
     /// Create a registry from a list of sites
-    pub fn from_sites(sites: Vec<Box<dyn Site>>) -> Self {
+    pub fn from_sites(sites: Vec<Arc<dyn Site>>) -> Self {
         Self { all_sites: sites }
     }
 
     /// Get all sites
-    pub fn all(&self) -> &[Box<dyn Site>] {
+    pub fn all(&self) -> &[Arc<dyn Site>] {
         &self.all_sites
     }
 
     /// Get sites by type
-    pub fn by_type(&self, site_type: SiteType) -> Vec<&dyn Site> {
+    pub fn by_type(&self, site_type: SiteType) -> Vec<Arc<dyn Site>> {
         self.all_sites
             .iter()
             .filter(|site| site.site_type() == site_type)
-            .map(|site| site.as_ref())
+            .cloned()
             .collect()
     }
 
     /// Get sites by multiple types
-    pub fn by_types(&self, types: &[SiteType]) -> Vec<&dyn Site> {
+    pub fn by_types(&self, types: &[SiteType]) -> Vec<Arc<dyn Site>> {
         if types.is_empty() {
-            return self.all_sites.iter().map(|s| s.as_ref()).collect();
+            return self.all_sites.clone();
         }
 
         let type_set: std::collections::HashSet<SiteType> = types.iter().copied().collect();
         self.all_sites
             .iter()
             .filter(|site| type_set.contains(&site.site_type()))
-            .map(|site| site.as_ref())
+            .cloned()
             .collect()
     }
 
     /// Find a site by name (case-insensitive)
-    pub fn by_name(&self, name: &str) -> Option<&dyn Site> {
+    pub fn by_name(&self, name: &str) -> Option<Arc<dyn Site>> {
         let name_lower = name.to_lowercase();
         self.all_sites
             .iter()
             .find(|site| site.name().to_lowercase() == name_lower)
-            .map(|site| site.as_ref())
+            .cloned()
     }
 
     /// Get sites by names (case-insensitive)
-    pub fn by_names(&self, names: &[String]) -> Vec<&dyn Site> {
+    pub fn by_names(&self, names: &[String]) -> Vec<Arc<dyn Site>> {
         if names.is_empty() {
-            return self.all_sites.iter().map(|s| s.as_ref()).collect();
+            return self.all_sites.clone();
         }
 
         let name_set: std::collections::HashSet<String> =
@@ -70,14 +71,14 @@ impl SiteRegistry {
         self.all_sites
             .iter()
             .filter(|site| name_set.contains(&site.name().to_lowercase()))
-            .map(|site| site.as_ref())
+            .cloned()
             .collect()
     }
 
     /// Filter sites by both type and name
-    pub fn filter(&self, types: &[SiteType], names: &[String]) -> Vec<&dyn Site> {
-        let mut filtered: Vec<&dyn Site> = if types.is_empty() {
-            self.all_sites.iter().map(|s| s.as_ref()).collect()
+    pub fn filter(&self, types: &[SiteType], names: &[String]) -> Vec<Arc<dyn Site>> {
+        let mut filtered: Vec<Arc<dyn Site>> = if types.is_empty() {
+            self.all_sites.clone()
         } else {
             self.by_types(types)
         };
@@ -163,12 +164,12 @@ mod tests {
 
     #[test]
     fn test_registry_from_sites() {
-        let sites: Vec<Box<dyn Site>> = vec![
-            Box::new(MockSite {
+        let sites: Vec<Arc<dyn Site>> = vec![
+            Arc::new(MockSite {
                 name: "GitHub".to_string(),
                 site_type: SiteType::Dev,
             }),
-            Box::new(MockSite {
+            Arc::new(MockSite {
                 name: "Twitter".to_string(),
                 site_type: SiteType::Social,
             }),
@@ -179,12 +180,12 @@ mod tests {
 
     #[test]
     fn test_registry_by_type() {
-        let sites: Vec<Box<dyn Site>> = vec![
-            Box::new(MockSite {
+        let sites: Vec<Arc<dyn Site>> = vec![
+            Arc::new(MockSite {
                 name: "GitHub".to_string(),
                 site_type: SiteType::Dev,
             }),
-            Box::new(MockSite {
+            Arc::new(MockSite {
                 name: "Twitter".to_string(),
                 site_type: SiteType::Social,
             }),
@@ -197,7 +198,7 @@ mod tests {
 
     #[test]
     fn test_registry_by_name() {
-        let sites: Vec<Box<dyn Site>> = vec![Box::new(MockSite {
+        let sites: Vec<Arc<dyn Site>> = vec![Arc::new(MockSite {
             name: "GitHub".to_string(),
             site_type: SiteType::Dev,
         })];
@@ -209,12 +210,12 @@ mod tests {
 
     #[test]
     fn test_registry_filter() {
-        let sites: Vec<Box<dyn Site>> = vec![
-            Box::new(MockSite {
+        let sites: Vec<Arc<dyn Site>> = vec![
+            Arc::new(MockSite {
                 name: "GitHub".to_string(),
                 site_type: SiteType::Dev,
             }),
-            Box::new(MockSite {
+            Arc::new(MockSite {
                 name: "Twitter".to_string(),
                 site_type: SiteType::Social,
             }),
@@ -227,12 +228,12 @@ mod tests {
 
     #[test]
     fn test_registry_statistics() {
-        let sites: Vec<Box<dyn Site>> = vec![
-            Box::new(MockSite {
+        let sites: Vec<Arc<dyn Site>> = vec![
+            Arc::new(MockSite {
                 name: "GitHub".to_string(),
                 site_type: SiteType::Dev,
             }),
-            Box::new(MockSite {
+            Arc::new(MockSite {
                 name: "Twitter".to_string(),
                 site_type: SiteType::Social,
             }),

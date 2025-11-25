@@ -27,7 +27,7 @@ impl Engine {
         request: Option<Arc<dyn Request>>,
     ) -> Result<Vec<SearchResult>> {
         // Get filtered sites from registry
-        let sites: Vec<&dyn Site> = self.registry.filter(site_types, site_names);
+        let sites: Vec<Arc<dyn Site>> = self.registry.filter(site_types, site_names);
 
         if sites.is_empty() {
             return Ok(vec![]);
