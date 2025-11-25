@@ -1,14 +1,12 @@
 //! NSFW/adult content platform site checkers
 
-// Site implementations will be added here
+pub mod onlyfans;
 
 use crate::sites::Site;
 
 /// Get all NSFW sites
 pub fn all_sites() -> Vec<Box<dyn Site>> {
-    vec![
-        // Add NSFW site checkers here
-    ]
+    vec![Box::new(onlyfans::OnlyFansChecker::new())]
 }
 
 #[cfg(test)]

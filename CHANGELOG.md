@@ -5,6 +5,7 @@
 [Full Changelog](https://github.com/librehunt/sleuth/compare/f9d6d027ed2e0164435e56e6c12f0184422a79c8...HEAD)
 
 ### Added
+- Site implementations for all categories: Twitter (social), Reddit (forum), Steam (gaming), LinkedIn (professional), OnlyFans (nsfw), Medium (other)
 - Request interface abstraction (`Request` trait) for swappable HTTP implementations
 - Architecture diagrams in `ARCHITECTURE.md` (flowchart, component graph, sequence diagram)
 - `HttpRequest` implementation using reqwest

@@ -1,14 +1,12 @@
-//! Forum and community site checkers
+//! Forum and discussion platform site checkers
 
-// Site implementations will be added here
+pub mod reddit;
 
 use crate::sites::Site;
 
 /// Get all forum sites
 pub fn all_sites() -> Vec<Box<dyn Site>> {
-    vec![
-        // Add forum site checkers here
-    ]
+    vec![Box::new(reddit::RedditChecker::new())]
 }
 
 #[cfg(test)]

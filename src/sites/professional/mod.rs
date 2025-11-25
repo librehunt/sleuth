@@ -1,16 +1,12 @@
 //! Professional network site checkers
 
-// Site implementations will be added here
-// pub mod linkedin;
+pub mod linkedin;
 
 use crate::sites::Site;
 
 /// Get all professional sites
 pub fn all_sites() -> Vec<Box<dyn Site>> {
-    vec![
-        // Box::new(linkedin::LinkedInChecker::new()),
-        // Add more as needed
-    ]
+    vec![Box::new(linkedin::LinkedInChecker::new())]
 }
 
 #[cfg(test)]

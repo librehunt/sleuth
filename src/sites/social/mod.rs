@@ -1,19 +1,12 @@
 //! Social media platform site checkers
 
-// Site implementations will be added here
-// pub mod twitter;
-// pub mod instagram;
-// pub mod facebook;
+pub mod twitter;
 
 use crate::sites::Site;
 
 /// Get all social sites
 pub fn all_sites() -> Vec<Box<dyn Site>> {
-    vec![
-        // Box::new(twitter::TwitterChecker::new()),
-        // Box::new(instagram::InstagramChecker::new()),
-        // Add more as needed
-    ]
+    vec![Box::new(twitter::TwitterChecker::new())]
 }
 
 #[cfg(test)]
