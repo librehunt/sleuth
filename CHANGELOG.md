@@ -6,6 +6,11 @@
 
 ### Added
 - Site implementations for all categories: Twitter (social), Reddit (forum), Steam (gaming), LinkedIn (professional), OnlyFans (nsfw), Medium (other)
+
+### Fixed
+- Steam false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with error pages
+- Medium false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with "PAGE NOT FOUND" message
+
 - Request interface abstraction (`Request` trait) for swappable HTTP implementations
 - Architecture diagrams in `ARCHITECTURE.md` (flowchart, component graph, sequence diagram)
 - `HttpRequest` implementation using reqwest
