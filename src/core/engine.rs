@@ -65,9 +65,9 @@ mod tests {
     #[tokio::test]
     async fn test_engine_search_empty_sites() {
         let engine = Engine::new();
-        // Search with no matching sites
+        // Search with site name that doesn't exist
         let results = engine
-            .search("testuser", &[SiteType::Nsfw], &[], None)
+            .search("testuser", &[], &[String::from("NonExistentSite")], None)
             .await;
         assert!(results.is_ok());
         let results = results.unwrap();

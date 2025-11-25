@@ -1,14 +1,12 @@
 //! Other/uncategorized site checkers
 
-// Site implementations will be added here
+pub mod medium;
 
 use crate::sites::Site;
 
 /// Get all other sites
 pub fn all_sites() -> Vec<Box<dyn Site>> {
-    vec![
-        // Add other site checkers here
-    ]
+    vec![Box::new(medium::MediumChecker::new())]
 }
 
 #[cfg(test)]
