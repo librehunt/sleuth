@@ -101,6 +101,24 @@ sleuth username --format json
 sleuth username --format csv
 ```
 
+### Browser Verification
+
+By default, sleuth uses fast HTTP HEAD requests for all sites. For sites that require JavaScript rendering (like OnlyFans, Reddit), you can use the `--verify` flag to perform a second verification pass using a headless browser:
+
+```bash
+# Fast scan (default) - uses HTTP HEAD for all sites
+sleuth username
+
+# Verified scan - uses browser for sites that require it
+sleuth username --verify
+```
+
+**How it works:**
+1. **First pass**: HTTP HEAD requests for all sites (fast, ~0.5s per site)
+2. **Second pass** (if `--verify`): Headless browser verification for found sites that require JavaScript rendering (slower, ~4s per site, but more accurate)
+
+This two-pass approach provides the best balance between speed and accuracy. Use `--verify` when you need to eliminate false positives from JavaScript-rendered sites.
+
 ## Acknowledgments
 
 This project is inspired by and based on [sherlock](https://github.com/sherlock-project/sherlock) by [sherlock-project](https://github.com/sherlock-project). Special thanks to the original creators for their excellent work.

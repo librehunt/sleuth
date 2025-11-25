@@ -60,17 +60,30 @@ pub fn filter_sites<S: Site + ?Sized>(
     filtered
 }
 
-/// Scan a username across multiple sites
+/// Scan a username across multiple sites using a two-pass strategy
 ///
 /// # Parameters
 /// - `username`: The username to search for
 /// - `sites`: List of sites to check
 /// - `request`: Optional request implementation (defaults to HTTP if None)
-/// - `verify`: If true, verify found results with browser for sites that require it
+/// - `verify`: If true, perform a second verification pass with browser headless for found sites that require it
 ///
 /// # Strategy
-/// 1. First pass: Use HTTP HEAD for all sites (fast)
-/// 2. If --verify: Second pass with browser headless for found sites that require browser rendering
+/// 
+/// ## First Pass (Always)
+/// - Uses HTTP HEAD requests for all sites (fast, ~0.5s per site)
+/// - Sites that `requires_browser()` and return 200 with HEAD are marked as "found" (to be verified)
+/// - Most sites work correctly with HEAD and provide immediate results
+///
+/// ## Second Pass (If `verify` is true)
+/// - Verifies found results using headless browser rendering
+/// - Only checks sites that:
+///   - Were found in the first pass (`exists == true`)
+///   - Require browser rendering (`requires_browser() == true`)
+/// - Corrects false positives from HEAD-only detection
+/// - Slower (~4s per site) but more accurate for JavaScript-rendered content
+///
+/// This approach provides the best balance between speed and accuracy.
 pub async fn scan_username(
     username: &str,
     sites: Vec<Arc<dyn Site>>,

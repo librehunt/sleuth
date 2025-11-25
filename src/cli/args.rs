@@ -34,8 +34,14 @@ pub struct Args {
     #[arg(long = "retries", default_value_t = 3)]
     pub retries: u32,
 
-    /// Reserved for future use (e.g., stricter verification or additional checks)
-    /// Currently, browser rendering is automatically used only for sites that require it
+    /// Verify found results with browser headless rendering
+    /// 
+    /// By default, sleuth uses fast HTTP HEAD requests for all sites. When --verify is enabled,
+    /// a second pass is performed: sites that were found in the first pass and require browser
+    /// rendering (e.g., JavaScript-heavy sites like OnlyFans, Reddit) are verified using a
+    /// headless browser to ensure accuracy and eliminate false positives.
+    /// 
+    /// This is slower but more accurate, especially for sites that render content dynamically.
     #[arg(long = "verify")]
     pub verify: bool,
 }

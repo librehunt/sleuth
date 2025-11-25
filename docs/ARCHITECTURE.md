@@ -185,8 +185,18 @@ sequenceDiagram
   - `parse_response()`: Interprets HTTP response (default: 200=exists, 404=not found)
   - `http_method()`: Returns HTTP method to use (default: HEAD)
   - `headers()`: Returns custom headers if needed
+  - `requires_browser()`: Indicates if site needs JavaScript rendering (default: false)
 - Easy to add new sites by creating files in the appropriate type directory
 - All sites are automatically registered via `sites::all_sites()`
+
+### Request Module (`src/request/`)
+- Abstraction for different request types (HTTP, Browser, Tor)
+- `HttpRequest`: Fast HTTP requests using `reqwest`
+- `BrowserRequest`: Headless browser rendering using `headless_chrome` for JavaScript-heavy sites
+- `TorRequest`: Tor network support (planned)
+- Two-pass scanning strategy:
+  - **First pass**: HTTP HEAD for all sites (fast)
+  - **Second pass** (if `--verify`): Browser verification for found sites that require it
 
 ### Request Module (`src/request/`)
 - Abstraction over HTTP clients via `Request` trait
