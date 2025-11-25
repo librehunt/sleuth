@@ -69,7 +69,7 @@ pub fn filter_sites<S: Site + ?Sized>(
 /// - `verify`: If true, perform a second verification pass with browser headless for found sites that require it
 ///
 /// # Strategy
-/// 
+///
 /// ## First Pass (Always)
 /// - Uses HTTP HEAD requests for all sites (fast, ~0.5s per site)
 /// - Sites that `requires_browser()` and return 200 with HEAD are marked as "found" (to be verified)
@@ -109,13 +109,23 @@ pub async fn scan_username(
 
         tasks.spawn(async move {
             let url = site_clone.build_url(&username_clone);
-            
-            // Force HEAD for first pass (fast) - ignore site's preferred method
-            // Sites that need body/JavaScript will be verified in second pass if --verify
-            let response = request_clone.head(&url).await?;
+            let method = site_clone.http_method();
+
+            // Use site's preferred HTTP method for first pass
+            // Most sites use HEAD (fast), but some need GET to get body for parsing
+            // Sites that need JavaScript rendering will be verified in second pass if --verify
+            let response = if method == "GET" {
+                request_clone.get(&url).await?
+            } else {
+                request_clone.head(&url).await?
+            };
 
             // Parse response using site-specific logic
-            let exists = site_clone.parse_response(&username_clone, response.status_code, response.body.as_deref());
+            let exists = site_clone.parse_response(
+                &username_clone,
+                response.status_code,
+                response.body.as_deref(),
+            );
 
             match exists {
                 Some(true) => Ok(SearchResult::found(
@@ -131,7 +141,8 @@ pub async fn scan_username(
                     // If parse_response returns None (uncertain), check if site requires browser
                     // For sites that require browser, HEAD returning 200 is a positive indicator
                     // (will be verified in second pass if --verify is enabled)
-                    if site_clone.requires_browser() && (200..=299).contains(&response.status_code) {
+                    if site_clone.requires_browser() && (200..=299).contains(&response.status_code)
+                    {
                         Ok(SearchResult::found(
                             site_clone.name().to_string(),
                             username_clone,
@@ -167,7 +178,7 @@ pub async fn scan_username(
         // Find sites that were found and require browser
         let mut verify_tasks: JoinSet<Result<SearchResult>> = JoinSet::new();
         let username_for_verify = username.clone(); // Clone for second pass
-        
+
         for (site, idx) in site_map {
             // Check if this site was found in first pass
             if let Some(result) = results.get(idx) {
@@ -184,7 +195,11 @@ pub async fn scan_username(
                         let response = browser_request.request(method, &url).await?;
 
                         // Parse response using site-specific logic
-                        let exists = site_clone.parse_response(&username_clone, response.status_code, response.body.as_deref());
+                        let exists = site_clone.parse_response(
+                            &username_clone,
+                            response.status_code,
+                            response.body.as_deref(),
+                        );
 
                         match exists {
                             Some(true) => Ok(SearchResult::found(
@@ -211,7 +226,9 @@ pub async fn scan_username(
             match res {
                 Ok(Ok(verified_result)) => {
                     // Update the corresponding result in results vector
-                    if let Some(result) = results.iter_mut().find(|r| r.site == verified_result.site) {
+                    if let Some(result) =
+                        results.iter_mut().find(|r| r.site == verified_result.site)
+                    {
                         *result = verified_result;
                     }
                 }
@@ -433,7 +450,12 @@ mod tests {
             fn site_type(&self) -> SiteType {
                 SiteType::Other
             }
-            fn parse_response(&self, _username: &str, status_code: u16, _body: Option<&str>) -> Option<bool> {
+            fn parse_response(
+                &self,
+                _username: &str,
+                status_code: u16,
+                _body: Option<&str>,
+            ) -> Option<bool> {
                 // Only return true if status is 200 (ignore body for this test as we can't easily mock body in integration test without mock server)
                 if status_code == 200 {
                     Some(true)

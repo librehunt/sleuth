@@ -33,28 +33,32 @@ impl Site for OnlyFansChecker {
         true // OnlyFans renders content with JavaScript
     }
 
-    fn parse_response(&self, _username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
+    fn parse_response(
+        &self,
+        _username: &str,
+        status_code: u16,
+        body: Option<&str>,
+    ) -> Option<bool> {
         match status_code {
             404 => Some(false),
             200..=299 => {
                 if let Some(body_text) = body {
                     let body_lc = body_text.to_ascii_lowercase();
-                    
+
                     // Check for error page structure (negative indicators)
                     // Error pages have specific CSS classes like "b-404", "b-wrapper-404"
-                    let has_error_structure = 
-                        body_lc.contains("b-404")
+                    let has_error_structure = body_lc.contains("b-404")
                         || body_lc.contains("b-wrapper-404")
                         || body_lc.contains("b-404__title")
                         || body_lc.contains("b-404__description");
-                    
+
                     if has_error_structure {
                         return Some(false);
                     }
-                    
+
                     // Check for valid profile structure (positive indicators)
                     // Valid profiles have specific CSS classes and IDs that indicate a real profile page
-                    let has_profile_structure = 
+                    let has_profile_structure =
                         // Profile-specific CSS classes
                         body_lc.contains("b-profile")
                         || body_lc.contains("b-profile__header")
@@ -71,23 +75,23 @@ impl Site for OnlyFansChecker {
                         || body_lc.contains("icon-profile")
                         || body_lc.contains("icon-media")
                         || body_lc.contains("icon-post");
-                    
+
                     // If we detect profile structure, it's a valid profile
                     if has_profile_structure {
                         return Some(true);
                     }
-                    
+
                     // If body is very short, likely an error page
                     if body_text.len() < 3000 {
                         return Some(false);
                     }
-                    
+
                     // If content is substantial (> 20KB) and no error structure, assume valid
                     // (large pages are usually valid profiles with lots of content)
                     if body_text.len() > 20000 {
                         return Some(true);
                     }
-                    
+
                     // Default to false to avoid false positives
                     // If we can't find clear positive indicators, assume not found
                     Some(false)
@@ -147,14 +151,20 @@ mod tests {
     fn test_onlyfans_checker_false_positive_page_not_found() {
         let checker = OnlyFansChecker::new();
         let body = r#"<html><body>PAGE NOT FOUND</body></html>"#;
-        assert_eq!(checker.parse_response("testuser", 200, Some(body)), Some(false));
+        assert_eq!(
+            checker.parse_response("testuser", 200, Some(body)),
+            Some(false)
+        );
     }
 
     #[test]
     fn test_onlyfans_checker_false_positive_not_found_text() {
         let checker = OnlyFansChecker::new();
         let body = r#"<html><body>Not Found</body></html>"#;
-        assert_eq!(checker.parse_response("testuser", 200, Some(body)), Some(false));
+        assert_eq!(
+            checker.parse_response("testuser", 200, Some(body)),
+            Some(false)
+        );
     }
 
     #[test]
@@ -164,9 +174,13 @@ mod tests {
         assert_eq!(checker.parse_response("testuser", 200, None), None);
         assert_eq!(checker.parse_response("testuser", 404, None), Some(false));
         assert_eq!(checker.parse_response("testuser", 500, None), None);
-        
+
         // With body containing profile structure, should return true
-        let body_with_profile = r#"<html><body class="b-profile"><div class="b-username">testuser</div></body></html>"#;
-        assert_eq!(checker.parse_response("testuser", 200, Some(body_with_profile)), Some(true));
+        let body_with_profile =
+            r#"<html><body class="b-profile"><div class="b-username">testuser</div></body></html>"#;
+        assert_eq!(
+            checker.parse_response("testuser", 200, Some(body_with_profile)),
+            Some(true)
+        );
     }
 }

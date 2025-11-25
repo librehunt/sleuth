@@ -34,7 +34,3 @@ criterion = "0.5"
 [[bench]]
 name = "bench_scanner"
 harness = false
-
-[[bin]]
-name = "debug_onlyfans"
-path = "src/bin/debug_onlyfans.rs"

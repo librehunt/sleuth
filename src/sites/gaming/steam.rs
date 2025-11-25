@@ -29,23 +29,58 @@ impl Site for SteamChecker {
         SiteType::Gaming
     }
 
-    fn parse_response(&self, _username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
+    fn parse_response(
+        &self,
+        _username: &str,
+        status_code: u16,
+        body: Option<&str>,
+    ) -> Option<bool> {
         match status_code {
             404 => Some(false),
             200..=299 => {
-                // Steam returns 200 even for non-existent profiles
-                // Check response body for error indicators
                 if let Some(body_text) = body {
-                    // French error message
-                    if body_text.contains("Profil spécifié introuvable") {
+                    let body_lc = body_text.to_ascii_lowercase();
+
+                    // Check for error page structure (negative indicators)
+                    // Error pages have specific indicators that don't depend on language
+                    let has_error_structure = body_lc.contains("steam community :: error")
+                        || body_lc.contains("fatalerror.css")
+                        || body_lc.contains("error_ctn")
+                        || body_lc.contains("class=\"error");
+
+                    if has_error_structure {
                         return Some(false);
                     }
-                    // English error message
-                    if body_text.contains("The specified profile could not be found") {
+
+                    // Check for valid profile structure (positive indicators)
+                    // Valid profiles have specific CSS classes and structure
+                    let has_profile_structure =
+                        // Profile page class (most reliable indicator)
+                        body_lc.contains("profile_page")
+                        // Profile-specific elements
+                        || (body_lc.contains("persona_name") && body_lc.contains("profile_content"))
+                        || body_lc.contains("profile_header")
+                        || body_lc.contains("playeravatar")
+                        || body_lc.contains("profile_badges")
+                        || body_lc.contains("profile_summary");
+
+                    // If we detect profile structure, it's a valid profile
+                    if has_profile_structure {
+                        return Some(true);
+                    }
+
+                    // If body is very short, likely an error page
+                    if body_text.len() < 5000 {
                         return Some(false);
                     }
+
+                    // Default to false to avoid false positives
+                    // If we can't find clear positive indicators, assume not found
+                    Some(false)
+                } else {
+                    // No body - can't determine
+                    None
                 }
-                Some(true)
             }
             _ => None,
         }
@@ -97,28 +132,40 @@ mod tests {
     #[test]
     fn test_steam_checker_parse_response() {
         let checker = SteamChecker::new();
-        // Valid profile (200 without error message)
-        assert_eq!(
-            checker.parse_response("testuser", 200, Some("<html>Profile content</html>")),
-            Some(true)
-        );
+        // With body=None (HEAD request), we can't determine - returns None
+        assert_eq!(checker.parse_response("testuser", 200, None), None);
         // 404 status
         assert_eq!(checker.parse_response("testuser", 404, None), Some(false));
         // 500 status
         assert_eq!(checker.parse_response("testuser", 500, None), None);
+
+        // Valid profile with profile_page class
+        let body_with_profile = r#"<html><body class="flat_page profile_page"><div class="persona_name">testuser</div></body></html>"#;
+        assert_eq!(
+            checker.parse_response("testuser", 200, Some(body_with_profile)),
+            Some(true)
+        );
     }
 
     #[test]
-    fn test_steam_checker_false_positive_french() {
+    fn test_steam_checker_false_positive_error_page() {
         let checker = SteamChecker::new();
-        let body = r#"<html><body>Profil spécifié introuvable</body></html>"#;
-        assert_eq!(checker.parse_response("testuser", 200, Some(body)), Some(false));
+        // Error page with error_ctn class
+        let body_error = r#"<html><title>Steam Community :: Error</title><body><div class="error_ctn">Error</div></body></html>"#;
+        assert_eq!(
+            checker.parse_response("testuser", 200, Some(body_error)),
+            Some(false)
+        );
     }
 
     #[test]
-    fn test_steam_checker_false_positive_english() {
+    fn test_steam_checker_false_positive_fatalerror() {
         let checker = SteamChecker::new();
-        let body = r#"<html><body>The specified profile could not be found</body></html>"#;
-        assert_eq!(checker.parse_response("testuser", 200, Some(body)), Some(false));
+        // Error page with fatalerror.css
+        let body_error = r#"<html><link href="fatalerror.css"><body>Error</body></html>"#;
+        assert_eq!(
+            checker.parse_response("testuser", 200, Some(body_error)),
+            Some(false)
+        );
     }
 }

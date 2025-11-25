@@ -17,9 +17,8 @@ impl BrowserRequest {
     }
 
     fn launch_browser(&self) -> Result<Browser> {
-        Browser::default().map_err(|e| {
-            SleuthError::Unknown(format!("Failed to launch browser: {}", e))
-        })
+        Browser::default()
+            .map_err(|e| SleuthError::Unknown(format!("Failed to launch browser: {}", e)))
     }
 }
 
@@ -39,14 +38,13 @@ impl Request for BrowserRequest {
 
         tokio::task::spawn_blocking(move || {
             let browser = BrowserRequest::new(timeout.as_secs())?.launch_browser()?;
-            let tab = browser.new_tab().map_err(|e| {
-                SleuthError::Unknown(format!("Failed to create tab: {}", e))
-            })?;
+            let tab = browser
+                .new_tab()
+                .map_err(|e| SleuthError::Unknown(format!("Failed to create tab: {}", e)))?;
 
             // Navigate to URL
-            tab.navigate_to(&url).map_err(|e| {
-                SleuthError::Unknown(format!("Failed to navigate: {}", e))
-            })?;
+            tab.navigate_to(&url)
+                .map_err(|e| SleuthError::Unknown(format!("Failed to navigate: {}", e)))?;
 
             // Wait for network to be idle (page loaded)
             tab.wait_until_navigated().map_err(|e| {
@@ -58,12 +56,12 @@ impl Request for BrowserRequest {
             std::thread::sleep(Duration::from_millis(2000));
 
             // Get the rendered HTML using evaluate_expression
-            let body = tab.evaluate("document.documentElement.outerHTML", false)
-                .map_err(|e| {
-                    SleuthError::Unknown(format!("Failed to get content: {}", e))
-                })?;
-            
-            let body_str = body.value
+            let body = tab
+                .evaluate("document.documentElement.outerHTML", false)
+                .map_err(|e| SleuthError::Unknown(format!("Failed to get content: {}", e)))?;
+
+            let body_str = body
+                .value
                 .and_then(|v| v.as_str().map(|s| s.to_string()))
                 .ok_or_else(|| {
                     SleuthError::Unknown("Failed to extract HTML content".to_string())
@@ -110,4 +108,3 @@ mod tests {
         assert!(request.is_ok());
     }
 }
-

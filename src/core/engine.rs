@@ -68,7 +68,13 @@ mod tests {
         let engine = Engine::new();
         // Search with site name that doesn't exist
         let results = engine
-            .search("testuser", &[], &[String::from("NonExistentSite")], None, false)
+            .search(
+                "testuser",
+                &[],
+                &[String::from("NonExistentSite")],
+                None,
+                false,
+            )
             .await;
         assert!(results.is_ok());
         let results = results.unwrap();
@@ -79,7 +85,9 @@ mod tests {
     async fn test_engine_search_with_type_filter() {
         let engine = Engine::new();
         // Search with dev type filter (should find GitHub)
-        let results = engine.search("octocat", &[SiteType::Dev], &[], None, false).await;
+        let results = engine
+            .search("octocat", &[SiteType::Dev], &[], None, false)
+            .await;
         assert!(results.is_ok());
         let results = results.unwrap();
         // Should have at least one result if GitHub is registered
@@ -104,7 +112,13 @@ mod tests {
         let engine = Engine::new();
         // Search with both type and name filters
         let results = engine
-            .search("octocat", &[SiteType::Dev], &["github".to_string()], None, false)
+            .search(
+                "octocat",
+                &[SiteType::Dev],
+                &["github".to_string()],
+                None,
+                false,
+            )
             .await;
         assert!(results.is_ok());
         let results = results.unwrap();
@@ -129,7 +143,9 @@ mod tests {
         let engine = Engine::new();
         let request = create_request(RequestType::Http, 10).unwrap();
         // Search with custom request
-        let results = engine.search("octocat", &[], &[], Some(request), false).await;
+        let results = engine
+            .search("octocat", &[], &[], Some(request), false)
+            .await;
         assert!(results.is_ok());
     }
 
@@ -146,7 +162,13 @@ mod tests {
         let engine = Engine::new();
         // Search with multiple type filters
         let results = engine
-            .search("testuser", &[SiteType::Dev, SiteType::Social], &[], None, false)
+            .search(
+                "testuser",
+                &[SiteType::Dev, SiteType::Social],
+                &[],
+                None,
+                false,
+            )
             .await;
         assert!(results.is_ok());
     }

@@ -22,7 +22,12 @@ pub trait Site: Send + Sync {
 
     /// Determine if username exists based on HTTP response
     /// Returns Some(true) if exists, Some(false) if not found, None if uncertain
-    fn parse_response(&self, _username: &str, status_code: u16, _body: Option<&str>) -> Option<bool> {
+    fn parse_response(
+        &self,
+        _username: &str,
+        status_code: u16,
+        _body: Option<&str>,
+    ) -> Option<bool> {
         // Default implementation: 200 = exists, 404 = not found
         match status_code {
             200..=299 => Some(true),
@@ -120,8 +125,14 @@ mod tests {
     fn test_site_parse_response_with_body() {
         let site = TestSite;
         // Body is currently ignored in default implementation
-        assert_eq!(site.parse_response("testuser", 200, Some("body")), Some(true));
-        assert_eq!(site.parse_response("testuser", 404, Some("not found")), Some(false));
+        assert_eq!(
+            site.parse_response("testuser", 200, Some("body")),
+            Some(true)
+        );
+        assert_eq!(
+            site.parse_response("testuser", 404, Some("not found")),
+            Some(false)
+        );
     }
 
     // Test custom site implementation
@@ -146,7 +157,12 @@ mod tests {
             self.method
         }
 
-        fn parse_response(&self, _username: &str, status_code: u16, _body: Option<&str>) -> Option<bool> {
+        fn parse_response(
+            &self,
+            _username: &str,
+            status_code: u16,
+            _body: Option<&str>,
+        ) -> Option<bool> {
             // Custom logic: only 200 is true, everything else is false
             if status_code == 200 {
                 Some(true)
