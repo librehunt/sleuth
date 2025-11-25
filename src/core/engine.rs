@@ -67,12 +67,7 @@ mod tests {
         let engine = Engine::new();
         // Search with site name that doesn't exist
         let results = engine
-            .search(
-                "testuser",
-                &[],
-                &[String::from("NonExistentSite")],
-                None,
-            )
+            .search("testuser", &[], &[String::from("NonExistentSite")], None)
             .await;
         assert!(results.is_ok());
         let results = results.unwrap();
