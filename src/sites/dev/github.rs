@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn test_github_checker_parse_response() {
         let checker = GitHubChecker::new();
-        assert_eq!(checker.parse_response(200, None), Some(true));
-        assert_eq!(checker.parse_response(404, None), Some(false));
+        assert_eq!(checker.parse_response("testuser", 200, None), Some(true));
+        assert_eq!(checker.parse_response("testuser", 404, None), Some(false));
     }
 }

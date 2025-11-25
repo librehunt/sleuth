@@ -60,40 +60,72 @@ pub fn filter_sites<S: Site + ?Sized>(
     filtered
 }
 
-/// Scan a username across multiple sites
+/// Scan a username across multiple sites using a two-pass strategy
 ///
 /// # Parameters
 /// - `username`: The username to search for
 /// - `sites`: List of sites to check
 /// - `request`: Optional request implementation (defaults to HTTP if None)
+/// - `verify`: If true, perform a second verification pass with browser headless for found sites that require it
+///
+/// # Strategy
+///
+/// ## First Pass (Always)
+/// - Uses HTTP HEAD requests for all sites (fast, ~0.5s per site)
+/// - Sites that `requires_browser()` and return 200 with HEAD are marked as "found" (to be verified)
+/// - Most sites work correctly with HEAD and provide immediate results
+///
+/// ## Second Pass (If `verify` is true)
+/// - Verifies found results using headless browser rendering
+/// - Only checks sites that:
+///   - Were found in the first pass (`exists == true`)
+///   - Require browser rendering (`requires_browser() == true`)
+/// - Corrects false positives from HEAD-only detection
+/// - Slower (~4s per site) but more accurate for JavaScript-rendered content
+///
+/// This approach provides the best balance between speed and accuracy.
 pub async fn scan_username(
     username: &str,
     sites: Vec<Arc<dyn Site>>,
     request: Option<Arc<dyn Request>>,
+    verify: bool,
 ) -> Result<Vec<SearchResult>> {
     // Default to HTTP if no request provided
-    let request = request.unwrap_or_else(|| {
+    let default_request = request.unwrap_or_else(|| {
         create_request(RequestType::Http, 10).expect("Failed to create default HTTP request")
     });
 
+    // ===== FIRST PASS: HTTP HEAD for all sites =====
     let mut tasks: JoinSet<Result<SearchResult>> = JoinSet::new();
     let username = username.to_string();
+    let mut site_map: Vec<(Arc<dyn Site>, usize)> = Vec::new(); // Track sites for second pass
 
-    // Spawn tasks for all sites
-    for site in sites {
-        let request = Arc::clone(&request);
+    // Spawn tasks for all sites using HTTP HEAD
+    for (idx, site) in sites.iter().enumerate() {
         let username_clone = username.clone();
-        let site_clone = Arc::clone(&site);
+        let site_clone = Arc::clone(site);
+        let request_clone = Arc::clone(&default_request);
+        site_map.push((Arc::clone(site), idx));
 
         tasks.spawn(async move {
             let url = site_clone.build_url(&username_clone);
             let method = site_clone.http_method();
 
-            // Make request using the trait
-            let response = request.request(method, &url).await?;
+            // Use site's preferred HTTP method for first pass
+            // Most sites use HEAD (fast), but some need GET to get body for parsing
+            // Sites that need JavaScript rendering will be verified in second pass if --verify
+            let response = if method == "GET" {
+                request_clone.get(&url).await?
+            } else {
+                request_clone.head(&url).await?
+            };
 
             // Parse response using site-specific logic
-            let exists = site_clone.parse_response(response.status_code, response.body.as_deref());
+            let exists = site_clone.parse_response(
+                &username_clone,
+                response.status_code,
+                response.body.as_deref(),
+            );
 
             match exists {
                 Some(true) => Ok(SearchResult::found(
@@ -105,15 +137,29 @@ pub async fn scan_username(
                     site_clone.name().to_string(),
                     username_clone,
                 )),
-                None => Ok(SearchResult::not_found(
-                    site_clone.name().to_string(),
-                    username_clone,
-                )),
+                None => {
+                    // If parse_response returns None (uncertain), check if site requires browser
+                    // For sites that require browser, HEAD returning 200 is a positive indicator
+                    // (will be verified in second pass if --verify is enabled)
+                    if site_clone.requires_browser() && (200..=299).contains(&response.status_code)
+                    {
+                        Ok(SearchResult::found(
+                            site_clone.name().to_string(),
+                            username_clone,
+                            url,
+                        ))
+                    } else {
+                        Ok(SearchResult::not_found(
+                            site_clone.name().to_string(),
+                            username_clone,
+                        ))
+                    }
+                }
             }
         });
     }
 
-    // Collect results
+    // Collect first pass results
     let mut results = Vec::new();
     while let Some(res) = tasks.join_next().await {
         match res {
@@ -127,10 +173,78 @@ pub async fn scan_username(
         }
     }
 
+    // ===== SECOND PASS: Browser verification if --verify is enabled =====
+    if verify {
+        // Find sites that were found and require browser
+        let mut verify_tasks: JoinSet<Result<SearchResult>> = JoinSet::new();
+        let username_for_verify = username.clone(); // Clone for second pass
+
+        for (site, idx) in site_map {
+            // Check if this site was found in first pass
+            if let Some(result) = results.get(idx) {
+                if result.exists && site.requires_browser() {
+                    let username_clone = username_for_verify.clone();
+                    let site_clone = Arc::clone(&site);
+                    let browser_request = create_request(RequestType::Browser, 30)?;
+
+                    verify_tasks.spawn(async move {
+                        let url = site_clone.build_url(&username_clone);
+                        let method = site_clone.http_method();
+
+                        // Use browser for verification
+                        let response = browser_request.request(method, &url).await?;
+
+                        // Parse response using site-specific logic
+                        let exists = site_clone.parse_response(
+                            &username_clone,
+                            response.status_code,
+                            response.body.as_deref(),
+                        );
+
+                        match exists {
+                            Some(true) => Ok(SearchResult::found(
+                                site_clone.name().to_string(),
+                                username_clone,
+                                url,
+                            )),
+                            Some(false) => Ok(SearchResult::not_found(
+                                site_clone.name().to_string(),
+                                username_clone,
+                            )),
+                            None => Ok(SearchResult::not_found(
+                                site_clone.name().to_string(),
+                                username_clone,
+                            )),
+                        }
+                    });
+                }
+            }
+        }
+
+        // Collect verification results and update original results
+        while let Some(res) = verify_tasks.join_next().await {
+            match res {
+                Ok(Ok(verified_result)) => {
+                    // Update the corresponding result in results vector
+                    if let Some(result) =
+                        results.iter_mut().find(|r| r.site == verified_result.site)
+                    {
+                        *result = verified_result;
+                    }
+                }
+                Ok(Err(e)) => {
+                    eprintln!("Error verifying site: {}", e);
+                }
+                Err(e) => {
+                    eprintln!("Verification task error: {}", e);
+                }
+            }
+        }
+    }
+
     Ok(results)
 }
 
-#[cfg(test)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -264,7 +378,7 @@ mod tests {
         use crate::request::{create_request, RequestType};
         let sites: Vec<Arc<dyn Site>> = vec![];
         let request = create_request(RequestType::Http, 10).unwrap();
-        let results = scan_username("testuser", sites, Some(request)).await;
+        let results = scan_username("testuser", sites, Some(request), false).await;
         assert!(results.is_ok());
         let results = results.unwrap();
         assert!(results.is_empty());
@@ -276,7 +390,7 @@ mod tests {
         let checker = GitHubChecker::new();
         let sites: Vec<Arc<dyn Site>> = vec![Arc::new(checker)];
         // Don't provide request, should default to HTTP
-        let results = scan_username("octocat", sites, None).await;
+        let results = scan_username("octocat", sites, None, false).await;
         assert!(results.is_ok());
         let results = results.unwrap();
         // Should have one result
@@ -291,7 +405,7 @@ mod tests {
         let checker = GitHubChecker::new();
         let sites: Vec<Arc<dyn Site>> = vec![Arc::new(checker)];
         let request = create_request(RequestType::Http, 10).unwrap();
-        let results = scan_username("octocat", sites, Some(request)).await;
+        let results = scan_username("octocat", sites, Some(request), false).await;
         assert!(results.is_ok());
         let results = results.unwrap();
         assert_eq!(results.len(), 1);
@@ -302,7 +416,7 @@ mod tests {
         use crate::sites::dev::GitHubChecker;
         let checker = GitHubChecker::new();
         let sites: Vec<Arc<dyn Site>> = vec![Arc::new(checker)];
-        let results = scan_username("nonexistentuser12345", sites, None).await;
+        let results = scan_username("nonexistentuser12345", sites, None, false).await;
         assert!(results.is_ok());
         let results = results.unwrap();
         // Should have results for all sites
@@ -317,7 +431,7 @@ mod tests {
         let sites: Vec<Arc<dyn Site>> = vec![Arc::new(checker)];
         let request = create_request(RequestType::Http, 1).unwrap(); // Short timeout
                                                                      // Use invalid URL pattern to trigger errors
-        let results = scan_username("test", sites, Some(request)).await;
+        let results = scan_username("test", sites, Some(request), false).await;
         // Should handle errors gracefully
         assert!(results.is_ok());
     }
@@ -336,7 +450,12 @@ mod tests {
             fn site_type(&self) -> SiteType {
                 SiteType::Other
             }
-            fn parse_response(&self, status_code: u16, _body: Option<&str>) -> Option<bool> {
+            fn parse_response(
+                &self,
+                _username: &str,
+                status_code: u16,
+                _body: Option<&str>,
+            ) -> Option<bool> {
                 // Only return true if status is 200 (ignore body for this test as we can't easily mock body in integration test without mock server)
                 if status_code == 200 {
                     Some(true)
@@ -361,7 +480,7 @@ mod tests {
         let sites: Vec<Arc<dyn Site>> = vec![Arc::new(site)];
 
         // We'll just check that it runs without panic
-        let results = scan_username("test", sites, None).await;
+        let results = scan_username("test", sites, None, false).await;
         assert!(results.is_ok());
     }
 }
