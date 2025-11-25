@@ -22,7 +22,7 @@ pub trait Site: Send + Sync {
 
     /// Determine if username exists based on HTTP response
     /// Returns Some(true) if exists, Some(false) if not found, None if uncertain
-    fn parse_response(&self, status_code: u16, _body: Option<&str>) -> Option<bool> {
+    fn parse_response(&self, username: &str, status_code: u16, _body: Option<&str>) -> Option<bool> {
         // Default implementation: 200 = exists, 404 = not found
         match status_code {
             200..=299 => Some(true),
@@ -39,6 +39,12 @@ pub trait Site: Send + Sync {
     /// Get custom headers if needed (default: none)
     fn headers(&self) -> Vec<(&'static str, &'static str)> {
         vec![]
+    }
+
+    /// Whether this site requires browser rendering (JavaScript execution)
+    /// Sites that render content dynamically should return true
+    fn requires_browser(&self) -> bool {
+        false // Default: no browser needed
     }
 }
 
@@ -72,9 +78,9 @@ mod tests {
     #[test]
     fn test_site_parse_response() {
         let site = TestSite;
-        assert_eq!(site.parse_response(200, None), Some(true));
-        assert_eq!(site.parse_response(404, None), Some(false));
-        assert_eq!(site.parse_response(500, None), None);
+        assert_eq!(site.parse_response("testuser", 200, None), Some(true));
+        assert_eq!(site.parse_response("testuser", 404, None), Some(false));
+        assert_eq!(site.parse_response("testuser", 500, None), None);
     }
 
     #[test]
@@ -101,21 +107,21 @@ mod tests {
     fn test_site_parse_response_edge_cases() {
         let site = TestSite;
         // Test various status codes
-        assert_eq!(site.parse_response(200, None), Some(true));
-        assert_eq!(site.parse_response(201, None), Some(true));
-        assert_eq!(site.parse_response(299, None), Some(true));
-        assert_eq!(site.parse_response(404, None), Some(false));
-        assert_eq!(site.parse_response(500, None), None);
-        assert_eq!(site.parse_response(301, None), None);
-        assert_eq!(site.parse_response(302, None), None);
+        assert_eq!(site.parse_response("testuser", 200, None), Some(true));
+        assert_eq!(site.parse_response("testuser", 201, None), Some(true));
+        assert_eq!(site.parse_response("testuser", 299, None), Some(true));
+        assert_eq!(site.parse_response("testuser", 404, None), Some(false));
+        assert_eq!(site.parse_response("testuser", 500, None), None);
+        assert_eq!(site.parse_response("testuser", 301, None), None);
+        assert_eq!(site.parse_response("testuser", 302, None), None);
     }
 
     #[test]
     fn test_site_parse_response_with_body() {
         let site = TestSite;
         // Body is currently ignored in default implementation
-        assert_eq!(site.parse_response(200, Some("body")), Some(true));
-        assert_eq!(site.parse_response(404, Some("not found")), Some(false));
+        assert_eq!(site.parse_response("testuser", 200, Some("body")), Some(true));
+        assert_eq!(site.parse_response("testuser", 404, Some("not found")), Some(false));
     }
 
     // Test custom site implementation
@@ -140,7 +146,7 @@ mod tests {
             self.method
         }
 
-        fn parse_response(&self, status_code: u16, _body: Option<&str>) -> Option<bool> {
+        fn parse_response(&self, username: &str, status_code: u16, _body: Option<&str>) -> Option<bool> {
             // Custom logic: only 200 is true, everything else is false
             if status_code == 200 {
                 Some(true)
@@ -155,9 +161,9 @@ mod tests {
         let site = CustomSite { method: "GET" };
         assert_eq!(site.name(), "CustomSite");
         assert_eq!(site.http_method(), "GET");
-        assert_eq!(site.parse_response(200, None), Some(true));
-        assert_eq!(site.parse_response(404, None), Some(false));
-        assert_eq!(site.parse_response(500, None), Some(false));
+        assert_eq!(site.parse_response("testuser", 200, None), Some(true));
+        assert_eq!(site.parse_response("testuser", 404, None), Some(false));
+        assert_eq!(site.parse_response("testuser", 500, None), Some(false));
     }
 
     #[test]

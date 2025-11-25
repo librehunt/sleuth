@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let results = engine
-        .search(&args.username, &site_types, &args.sites, None)
+        .search(&args.username, &site_types, &args.sites, None, args.verify)
         .await?;
 
     print_results(&results, &args.output_format);

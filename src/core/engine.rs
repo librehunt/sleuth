@@ -25,6 +25,7 @@ impl Engine {
         site_types: &[SiteType],
         site_names: &[String],
         request: Option<Arc<dyn Request>>,
+        verify: bool,
     ) -> Result<Vec<SearchResult>> {
         // Get filtered sites from registry
         let sites: Vec<Arc<dyn Site>> = self.registry.filter(site_types, site_names);
@@ -34,7 +35,7 @@ impl Engine {
         }
 
         // Scan username across all filtered sites
-        scan_username(username, sites, request).await
+        scan_username(username, sites, request, verify).await
     }
 }
 
@@ -67,7 +68,7 @@ mod tests {
         let engine = Engine::new();
         // Search with site name that doesn't exist
         let results = engine
-            .search("testuser", &[], &[String::from("NonExistentSite")], None)
+            .search("testuser", &[], &[String::from("NonExistentSite")], None, false)
             .await;
         assert!(results.is_ok());
         let results = results.unwrap();
@@ -78,7 +79,7 @@ mod tests {
     async fn test_engine_search_with_type_filter() {
         let engine = Engine::new();
         // Search with dev type filter (should find GitHub)
-        let results = engine.search("octocat", &[SiteType::Dev], &[], None).await;
+        let results = engine.search("octocat", &[SiteType::Dev], &[], None, false).await;
         assert!(results.is_ok());
         let results = results.unwrap();
         // Should have at least one result if GitHub is registered
@@ -90,7 +91,7 @@ mod tests {
         let engine = Engine::new();
         // Search with specific site name
         let results = engine
-            .search("octocat", &[], &["github".to_string()], None)
+            .search("octocat", &[], &["github".to_string()], None, false)
             .await;
         assert!(results.is_ok());
         let results = results.unwrap();
@@ -103,7 +104,7 @@ mod tests {
         let engine = Engine::new();
         // Search with both type and name filters
         let results = engine
-            .search("octocat", &[SiteType::Dev], &["github".to_string()], None)
+            .search("octocat", &[SiteType::Dev], &["github".to_string()], None, false)
             .await;
         assert!(results.is_ok());
         let results = results.unwrap();
@@ -115,7 +116,7 @@ mod tests {
     async fn test_engine_search_all_sites() {
         let engine = Engine::new();
         // Search without filters (all sites)
-        let results = engine.search("octocat", &[], &[], None).await;
+        let results = engine.search("octocat", &[], &[], None, false).await;
         assert!(results.is_ok());
         let results = results.unwrap();
         // Should have results if any sites are registered
@@ -128,7 +129,7 @@ mod tests {
         let engine = Engine::new();
         let request = create_request(RequestType::Http, 10).unwrap();
         // Search with custom request
-        let results = engine.search("octocat", &[], &[], Some(request)).await;
+        let results = engine.search("octocat", &[], &[], Some(request), false).await;
         assert!(results.is_ok());
     }
 
@@ -136,7 +137,7 @@ mod tests {
     async fn test_engine_search_empty_username() {
         let engine = Engine::new();
         // Search with empty username (edge case)
-        let results = engine.search("", &[], &[], None).await;
+        let results = engine.search("", &[], &[], None, false).await;
         assert!(results.is_ok());
     }
 
@@ -145,7 +146,7 @@ mod tests {
         let engine = Engine::new();
         // Search with multiple type filters
         let results = engine
-            .search("testuser", &[SiteType::Dev, SiteType::Social], &[], None)
+            .search("testuser", &[SiteType::Dev, SiteType::Social], &[], None, false)
             .await;
         assert!(results.is_ok());
     }

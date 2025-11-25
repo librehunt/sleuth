@@ -1,5 +1,6 @@
 //! Request abstraction for making HTTP requests
 
+pub mod browser;
 pub mod http;
 pub mod tor;
 pub mod trait_impl;
@@ -13,6 +14,7 @@ use std::sync::Arc;
 #[derive(Debug, Clone, Copy)]
 pub enum RequestType {
     Http,
+    Browser,
     Tor,
 }
 
@@ -20,6 +22,7 @@ pub enum RequestType {
 pub fn create_request(request_type: RequestType, timeout_secs: u64) -> Result<Arc<dyn Request>> {
     match request_type {
         RequestType::Http => Ok(Arc::new(http::HttpRequest::new(timeout_secs)?)),
+        RequestType::Browser => Ok(Arc::new(browser::BrowserRequest::new(timeout_secs)?)),
         RequestType::Tor => {
             // TODO: Implement Tor
             Err(crate::utils::error::SleuthError::Unknown(

@@ -33,6 +33,11 @@ pub struct Args {
     /// Number of retries for failed requests
     #[arg(long = "retries", default_value_t = 3)]
     pub retries: u32,
+
+    /// Reserved for future use (e.g., stricter verification or additional checks)
+    /// Currently, browser rendering is automatically used only for sites that require it
+    #[arg(long = "verify")]
+    pub verify: bool,
 }
 
 impl Args {

@@ -10,6 +10,8 @@
 ### Fixed
 - Steam false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with error pages
 - Medium false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with "PAGE NOT FOUND" message
+- Reddit false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with "Sorry, there isn't anything here" message
+- OnlyFans false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with "PAGE NOT FOUND" message
 
 - Request interface abstraction (`Request` trait) for swappable HTTP implementations
 - Architecture diagrams in `ARCHITECTURE.md` (flowchart, component graph, sequence diagram)

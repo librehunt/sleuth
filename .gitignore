@@ -5,4 +5,7 @@
 scripts
 issues/shared
 issues/sleuth/proposal
-issues/sleuth/todo
+
+issues/sleuth/done
+
+.agent

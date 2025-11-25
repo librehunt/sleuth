@@ -70,8 +70,8 @@ mod tests {
     #[test]
     fn test_linkedin_checker_parse_response() {
         let checker = LinkedInChecker::new();
-        assert_eq!(checker.parse_response(200, None), Some(true));
-        assert_eq!(checker.parse_response(404, None), Some(false));
-        assert_eq!(checker.parse_response(500, None), None);
+        assert_eq!(checker.parse_response("testuser", 200, None), Some(true));
+        assert_eq!(checker.parse_response("testuser", 404, None), Some(false));
+        assert_eq!(checker.parse_response("testuser", 500, None), None);
     }
 }
