@@ -26,7 +26,10 @@ pub fn filter_sites_by_type<S: Site + ?Sized>(
 }
 
 /// Filter sites by name
-pub fn filter_sites_by_name<S: Site + ?Sized>(sites: Vec<Arc<S>>, allowed_names: &[String]) -> Vec<Arc<S>> {
+pub fn filter_sites_by_name<S: Site + ?Sized>(
+    sites: Vec<Arc<S>>,
+    allowed_names: &[String],
+) -> Vec<Arc<S>> {
     if allowed_names.is_empty() {
         return sites;
     }
@@ -85,7 +88,7 @@ pub async fn scan_username(
         tasks.spawn(async move {
             let url = site_clone.build_url(&username_clone);
             let method = site_clone.http_method();
-            
+
             // Make request using the trait
             let response = request.request(method, &url).await?;
 
@@ -93,9 +96,19 @@ pub async fn scan_username(
             let exists = site_clone.parse_response(response.status_code, response.body.as_deref());
 
             match exists {
-                Some(true) => Ok(SearchResult::found(site_clone.name().to_string(), username_clone, url)),
-                Some(false) => Ok(SearchResult::not_found(site_clone.name().to_string(), username_clone)),
-                None => Ok(SearchResult::not_found(site_clone.name().to_string(), username_clone)),
+                Some(true) => Ok(SearchResult::found(
+                    site_clone.name().to_string(),
+                    username_clone,
+                    url,
+                )),
+                Some(false) => Ok(SearchResult::not_found(
+                    site_clone.name().to_string(),
+                    username_clone,
+                )),
+                None => Ok(SearchResult::not_found(
+                    site_clone.name().to_string(),
+                    username_clone,
+                )),
             }
         });
     }
@@ -314,12 +327,22 @@ mod tests {
         // Define a site with custom parse logic
         struct CustomParseSite;
         impl Site for CustomParseSite {
-            fn name(&self) -> &str { "CustomParse" }
-            fn url_pattern(&self) -> &str { "http://example.com/{}" }
-            fn site_type(&self) -> SiteType { SiteType::Other }
+            fn name(&self) -> &str {
+                "CustomParse"
+            }
+            fn url_pattern(&self) -> &str {
+                "http://example.com/{}"
+            }
+            fn site_type(&self) -> SiteType {
+                SiteType::Other
+            }
             fn parse_response(&self, status_code: u16, _body: Option<&str>) -> Option<bool> {
                 // Only return true if status is 200 (ignore body for this test as we can't easily mock body in integration test without mock server)
-                if status_code == 200 { Some(true) } else { Some(false) }
+                if status_code == 200 {
+                    Some(true)
+                } else {
+                    Some(false)
+                }
             }
         }
 
@@ -328,15 +351,15 @@ mod tests {
         // we'll rely on the fact that we are testing the *plumbing* here.
         // The fact that the code compiles and runs means the trait method is being called.
         // To be more rigorous, we would need a MockRequest implementation.
-        
+
         // Let's use a real request to a site that we know exists (example.com)
         // This is not ideal for unit tests but verifies end-to-end.
         // Better: use the existing MockSite but with custom implementation?
         // No, we can't change impl of MockSite dynamically.
-        
+
         let site = CustomParseSite;
         let sites: Vec<Arc<dyn Site>> = vec![Arc::new(site)];
-        
+
         // We'll just check that it runs without panic
         let results = scan_username("test", sites, None).await;
         assert!(results.is_ok());
