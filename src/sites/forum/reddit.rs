@@ -33,7 +33,7 @@ impl Site for RedditChecker {
         true // Reddit renders content with JavaScript
     }
 
-    fn parse_response(&self, username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
+    fn parse_response(&self, _username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
         match status_code {
             404 => Some(false),
             200..=299 => {
@@ -151,8 +151,16 @@ mod tests {
     #[test]
     fn test_reddit_checker_parse_response() {
         let checker = RedditChecker::new();
-        assert_eq!(checker.parse_response("testuser", 200, None), Some(true));
+        // With body=None (HEAD request), we can't determine - returns None
+        assert_eq!(checker.parse_response("testuser", 200, None), None);
         assert_eq!(checker.parse_response("testuser", 404, None), Some(false));
         assert_eq!(checker.parse_response("testuser", 500, None), None);
+        
+        // With body containing profile structure, should return true
+        // Need substantial content (> 50KB) and profile indicators
+        let mut body_with_profile = String::from(r#"<html><body class="shreddit-user-profile"><div>karma</div><div>cake-day</div>"#);
+        body_with_profile.push_str(&"x".repeat(60000)); // Make it > 50KB
+        body_with_profile.push_str("</body></html>");
+        assert_eq!(checker.parse_response("testuser", 200, Some(&body_with_profile)), Some(true));
     }
 }

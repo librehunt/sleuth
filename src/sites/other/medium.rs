@@ -29,7 +29,7 @@ impl Site for MediumChecker {
         SiteType::Other
     }
 
-    fn parse_response(&self, username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
+    fn parse_response(&self, _username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
         match status_code {
             404 => Some(false),
             200..=299 => {

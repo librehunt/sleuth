@@ -33,7 +33,7 @@ impl Site for OnlyFansChecker {
         true // OnlyFans renders content with JavaScript
     }
 
-    fn parse_response(&self, username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
+    fn parse_response(&self, _username: &str, status_code: u16, body: Option<&str>) -> Option<bool> {
         match status_code {
             404 => Some(false),
             200..=299 => {
@@ -160,8 +160,13 @@ mod tests {
     #[test]
     fn test_onlyfans_checker_parse_response() {
         let checker = OnlyFansChecker::new();
-        assert_eq!(checker.parse_response("testuser", 200, None), Some(true));
+        // With body=None (HEAD request), we can't determine - returns None
+        assert_eq!(checker.parse_response("testuser", 200, None), None);
         assert_eq!(checker.parse_response("testuser", 404, None), Some(false));
         assert_eq!(checker.parse_response("testuser", 500, None), None);
+        
+        // With body containing profile structure, should return true
+        let body_with_profile = r#"<html><body class="b-profile"><div class="b-username">testuser</div></body></html>"#;
+        assert_eq!(checker.parse_response("testuser", 200, Some(body_with_profile)), Some(true));
     }
 }

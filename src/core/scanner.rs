@@ -420,7 +420,7 @@ mod tests {
             fn site_type(&self) -> SiteType {
                 SiteType::Other
             }
-            fn parse_response(&self, status_code: u16, _body: Option<&str>) -> Option<bool> {
+            fn parse_response(&self, _username: &str, status_code: u16, _body: Option<&str>) -> Option<bool> {
                 // Only return true if status is 200 (ignore body for this test as we can't easily mock body in integration test without mock server)
                 if status_code == 200 {
                     Some(true)

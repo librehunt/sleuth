@@ -2,7 +2,6 @@
 
 use crate::request::{Request, RequestResponse};
 use crate::utils::error::{Result, SleuthError};
-use async_trait::async_trait;
 use headless_chrome::Browser;
 use std::time::Duration;
 

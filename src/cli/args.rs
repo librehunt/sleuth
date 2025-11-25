@@ -73,6 +73,7 @@ mod tests {
             output_format: "text".to_string(),
             timeout: 10,
             retries: 3,
+            verify: false,
         };
         let types = args.parsed_site_types();
         assert_eq!(types.len(), 2);
@@ -89,6 +90,7 @@ mod tests {
             output_format: "text".to_string(),
             timeout: 10,
             retries: 3,
+            verify: false,
         };
         let types = args.parsed_site_types();
         assert_eq!(types.len(), 1);
@@ -104,6 +106,7 @@ mod tests {
             output_format: "text".to_string(),
             timeout: 10,
             retries: 3,
+            verify: false,
         };
         assert!(args.has_type_filter());
 
@@ -114,6 +117,7 @@ mod tests {
             output_format: "text".to_string(),
             timeout: 10,
             retries: 3,
+            verify: false,
         };
         assert!(!args_no_filter.has_type_filter());
     }
@@ -127,6 +131,7 @@ mod tests {
             output_format: "text".to_string(),
             timeout: 10,
             retries: 3,
+            verify: false,
         };
         assert!(args.has_site_filter());
 
@@ -137,6 +142,7 @@ mod tests {
             output_format: "text".to_string(),
             timeout: 10,
             retries: 3,
+            verify: false,
         };
         assert!(!args_no_filter.has_site_filter());
     }
