@@ -1,30 +1,8 @@
-//! Sleuth - A Rust implementation of sherlock
-//!
-//! Sleuth is an OSINT (Open Source Intelligence) tool for finding usernames
-//! across social networks.
+pub fn default_fn() -> i32 {
+    42
+}
 
-pub mod cli;
-pub mod config;
-pub mod core;
-pub mod data;
-pub mod request;
-pub mod sites;
-pub mod utils;
-
-// Re-export commonly used types
-pub use core::{scan_username, Engine, SearchResult};
-pub use data::site_info::{SiteInfo, SiteType};
-pub use request::{create_request, Request, RequestResponse, RequestType};
-pub use sites::{Site, SiteRegistry, SiteStatistics};
-pub use utils::error::{Result, SleuthError};
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_library_initialization() {
-        // Basic smoke test
-        assert!(true);
-    }
+#[test]
+fn test_default_fn() {
+    assert_eq!(default_fn(), 42);
 }

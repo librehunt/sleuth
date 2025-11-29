@@ -1,44 +1,23 @@
 # Changelog
 
-## [Unreleased](https://github.com/librehunt/sleuth/tree/HEAD)
+## [Unreleased](https://github.com/Lsh0x/rbase/tree/HEAD)
 
-[Full Changelog](https://github.com/librehunt/sleuth/compare/f9d6d027ed2e0164435e56e6c12f0184422a79c8...HEAD)
+[Full Changelog](https://github.com/Lsh0x/rbase/compare/f9d6d027ed2e0164435e56e6c12f0184422a79c8...HEAD)
 
-### Added
-- Site implementations for all categories: Twitter (social), Reddit (forum), Steam (gaming), LinkedIn (professional), OnlyFans (nsfw), Medium (other)
+**Merged pull requests:**
 
-### Fixed
-- Steam false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with error pages
-- Medium false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with "PAGE NOT FOUND" message
-- Reddit false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with "Sorry, there isn't anything here" message
-- OnlyFans false positive detection: Now correctly identifies non-existent profiles that return HTTP 200 with "PAGE NOT FOUND" message
-
-- Request interface abstraction (`Request` trait) for swappable HTTP implementations
-- Architecture diagrams in `ARCHITECTURE.md` (flowchart, component graph, sequence diagram)
-- `HttpRequest` implementation using reqwest
-- `TorRequest` placeholder for future Tor support
-- Refactored `Site` trait: removed async `check_username()`, added `build_url()`, `parse_response()`, `http_method()`
-- `scan_username()` function with parameter order: `username`, `sites`, `request` (defaults to HTTP)
-- `Engine` for orchestrating searches across sites
-- CLI output formatting (text, JSON, CSV)
-- End-to-end search functionality with GitHub example
-- Concurrent request execution using Tokio tasks
-- Repository structure scaffolding with modular architecture
-- Core modules: CLI, engine, sites, HTTP client, config, data, utils
-- Site trait for implementing site checkers
-- Error handling with custom error types
-- Self-contained tests in source files
-- Integration test structure
-- Examples and benchmarks directories
-- Documentation (ARCHITECTURE.md, CONTRIBUTING.md, SITES.md)
-- Cargo.toml with necessary dependencies
-- Site type/category system (dev, social, nsfw, professional, gaming, forum, other)
-- CLI `--type` / `-t` flag for filtering sites by category
-- Site filtering logic in scanner module
-- `SiteType` enum with `FromStr` implementation
-- Type-based directory structure for sites (organized by category)
-- Example GitHub site checker implementation
-- SiteRegistry for centralized site management and filtering
+- fix: cron for sync template [\#16](https://github.com/Lsh0x/rbase/pull/16) ([Lsh0x](https://github.com/Lsh0x))
+- feat: add workflow to sync template [\#15](https://github.com/Lsh0x/rbase/pull/15) ([Lsh0x](https://github.com/Lsh0x))
+- .feat: update codecove version [\#14](https://github.com/Lsh0x/rbase/pull/14) ([Lsh0x](https://github.com/Lsh0x))
+- feat: rework codecov workflow [\#13](https://github.com/Lsh0x/rbase/pull/13) ([Lsh0x](https://github.com/Lsh0x))
+- feat: rework codecov workflow [\#12](https://github.com/Lsh0x/rbase/pull/12) ([Lsh0x](https://github.com/Lsh0x))
+- fix: libsso prob du latest ubuntu [\#11](https://github.com/Lsh0x/rbase/pull/11) ([Lsh0x](https://github.com/Lsh0x))
+- feat: upgrade version of actions cache [\#8](https://github.com/Lsh0x/rbase/pull/8) ([Lsh0x](https://github.com/Lsh0x))
+- fix: change last commit badge from master to main [\#5](https://github.com/Lsh0x/rbase/pull/5) ([Lsh0x](https://github.com/Lsh0x))
+- fix: github action coverage workflow [\#4](https://github.com/Lsh0x/rbase/pull/4) ([Lsh0x](https://github.com/Lsh0x))
+- Fix/transform template into lib [\#3](https://github.com/Lsh0x/rbase/pull/3) ([Lsh0x](https://github.com/Lsh0x))
+- feat: update github workflow for changelog [\#2](https://github.com/Lsh0x/rbase/pull/2) ([Lsh0x](https://github.com/Lsh0x))
+- feat: updates to 2022 [\#1](https://github.com/Lsh0x/rbase/pull/1) ([Lsh0x](https://github.com/Lsh0x))
 
 
 
